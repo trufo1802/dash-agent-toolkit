@@ -27,9 +27,11 @@ dash-agent-toolkit/
     dash-gotchas-review/
       SKILL.md                     <- pre-ship review checklist for any Dash UI change
     notebook-to-dash/
-      SKILL.md                     <- notebook -> Dash conversion with a numeric parity gate
+      SKILL.md                     <- notebook -> Dash conversion with numeric AND visual parity gates
       reference/mpl_plotly_map.md  <- matplotlib/seaborn -> Plotly mapping + number-changing traps
-      templates/                   <- goldens extractor + parity test template
+      reference/visual_parity.md   <- helper-twin contract, recipes (twinx grids, threshold fills, Styler tables, layout), failure table
+      templates/                   <- goldens extractor, parity test, fig_spec (figure-structure diff + contact sheet),
+                                      layout_lint (layout policy, static lint, rendered overlap check), plot_calls inventory
     dash-fix/
       SKILL.md                     <- symptom-dispatched fix loop for any Dash bug; browser proof before done
       reference/                   <- six playbooks: visual, stale, callbacks, perf, routing, persistence
@@ -69,7 +71,7 @@ Cursor and Codex never fire the toolkit's PostToolUse/Stop hooks — in those ag
 3. **`dash-gotchas-review`** — run before shipping any UI change, forever. Makes the classic Dash/CSS failure patterns an executable checklist instead of tribal knowledge.
 4. **`dash-install-guardrails`** — after the harness exists: converts the rules into machine gates (PostToolUse + Stop hooks covering Bash writes and JS assets, version gate, store-writer manifest, layout walk, state sandbox, build stamp). From here on, skipped smoke tests block the turn instead of shipping.
 5. **`dash-fix`** — the day-to-day entry point once the above are in place: any single bug ("broken", "slow", "blank page", "nothing changed") dispatches to a symptom playbook, with ground-truth checks first and browser proof + a regression test required before done.
-6. **`notebook-to-dash`** — whenever porting a Jupyter analysis into the app. Harvests golden outputs from the notebook, transplants (not transcribes) the compute, and blocks UI work behind a numeric parity test — plus an instruction-fidelity ledger so explicit asks can't silently vanish into "discretion".
+6. **`notebook-to-dash`** — whenever porting a Jupyter analysis into the app. Harvests golden outputs from the notebook, transplants (not transcribes) the compute, and blocks UI work behind two gates: a numeric parity test, and a visual parity test that compares the structure of each notebook figure (axes, secondary axes, colors per series and per point, fills, reference lines, labels, title lines) with its Plotly port and lints the layout (height per row, legend/title/subplot-title collisions). Notebooks that plot through a helper library (`fv.plot_*`) get the helper ported as a same-signature Plotly twin, not re-imagined from the call site — plus an instruction-fidelity ledger so explicit asks can't silently vanish into "discretion".
 
 **Why an enforcement layer at all:** prose rules drift. A checklist in CLAUDE.md gets skipped exactly when it matters most -- long sessions, big diffs, an agent that never re-read the doc. What survives is what the machine executes: invariants converted into verify-script checks, and hooks that run them after every edit (PLAYBOOK section 4). `dash-install-guardrails` installs that layer into a target repo; from then on "the app still works" is a command's exit code, not an agent's recollection.
 

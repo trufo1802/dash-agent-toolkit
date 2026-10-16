@@ -42,9 +42,12 @@ the ledger exists to surface.
 | `sns.regplot` | scatter + manual `np.polyfit` line trace | compute the fit in the compute layer, parity-check the coefficients |
 | `sns.boxplot/violinplot` | `go.Box` / `go.Violin` | whisker definitions differ (see trap) |
 | `pd.DataFrame.plot(...)` | iterate columns → traces | `.plot()` hides a loop; make it explicit |
-| color=`C0`,`tab10`, sns palettes | host app's palette (`palette.qualitative`) | never hardcode hex; theme via the app's template |
-| `plt.xticks(rotation=45)` | `xaxis_tickangle=-45` | |
+| color=`C0`,`tab10`, named / sns palettes | the SAME colors: `matplotlib.colors.to_hex(c)` → explicit `line.color` / `marker.color` | color is an encoding (per series, per point, per sign); Plotly's colorway cycles per TRACE, not per DataFrame, so an unset color scrambles the mapping. Host palette only where the notebook used defaults AND color carries no meaning — ledger it |
+| `plt.xticks(rotation=45)` | `xaxis_tickangle=-45` | reserve `margin.b` for the rotated labels (`layout_policy(xtick_rotated=True)`) |
 | dates on x (mpl auto-locator) | plotly handles natively | rangebreaks if the notebook hid weekends |
+| `plt.figure(figsize=(w*ncols, h*nrows))` + `tight_layout()` / `bbox_inches="tight"` | `layout_policy(nrows, ncols, ...)` → `height`, `margin`, `vertical_spacing` | mpl grows the canvas and packs it for you; Plotly's height and margins are constants — compute them from rows/title lines once, in one shared function (`templates/layout_lint.py`) |
+| `ax.legend(loc="best")` / `fig.legend(...)` outside | `layout.legend` from the policy (`"below"`/`"right"`), `legendgroup` + `showlegend` on one trace per series | a horizontal legend at `y≈1` lands on subplot titles; a vertical one at `x=1.02` needs `margin.r`; `lint_layout` flags both |
+| `ax.set_title("name\nsub")` (two-line titles) | `subplot_titles=["name<br>sub"]` + `vertical_spacing` sized for the extra line | the next row's titles are annotations in the gap above it; too small a gap overprints the row above |
 
 ## Traps that change numbers or drop data
 

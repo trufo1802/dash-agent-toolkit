@@ -178,6 +178,33 @@ framework. Numbers must match the notebook via the parity gate BEFORE any
 UI work. Don't touch existing frameworks.
 ```
 
+### notebook-to-dash, helper-driven notebook (plots via `fv.plot_*`-style library)
+
+```
+Use notebook-to-dash on <notebook>.ipynb. The notebook plots through
+<module>.py (imported as <alias>): port the HELPERS, not the cells -- run
+templates/plot_calls.py for the list, write <module>_plotly.py twins with the
+same names/signatures/kwarg semantics from the helper source; unsupported
+kwargs raise NotImplementedError. Visual encodings are requirements (axis
+tags -> secondary y, threshold fills, per-series/per-point colors, second
+title lines, point labels); do not apply the app palette to them. All
+geometry via layout_policy(); section titles in html.H4, not layout.title.
+Both gates green (test_parity.py, test_visual_parity.py with goldens captured
+from the notebook helper), lint_layout per figure, overlaps_in_page per Graph,
+contact sheets looked at. End with the PARITY REPORT.
+```
+
+### notebook-to-dash, page looks wrong vs notebook
+
+```
+The dash view for <notebook>.ipynb doesn't look like the notebook (all dots
+one color / right axis missing / fills gone / legend on the title / panels
+squashed). notebook-to-dash regression path: run both parity tests; if the
+visual gate doesn't exist yet, build it first (golden figure specs from the
+notebook helper), then fix the twin until diff_spec and lint_layout are
+clean. One commit per figure cell. Show me the contact sheets.
+```
+
 ---
 
 ## Multi-skill combos (numbered phases, one commit each)
