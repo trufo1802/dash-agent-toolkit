@@ -6,7 +6,7 @@ written from a real failed port (12-panel FX grid with L1/R1 axes, threshold fil
 and two-line titles came back as single black lines; a per-point colored scatter
 came back all blue; a Styler table came back as a wrong heatmap).
 
-Contents: 1 helper-twin contract · 2 goldens · 3 recipes · 4a layout lint · 4 contact sheet · 5 failure table
+Contents: 1 helper-twin contract · 2 goldens · 3 recipes · 4a layout lint · 4 contact sheet · 5 failure table · 6 kwargs as controls
 
 ## 1. The helper-twin contract (port the HELPER, not the cell)
 
@@ -170,3 +170,46 @@ catches what the spec does not encode (line width, label overlap, date formattin
 | 12 panels squashed, unreadable | fixed Graph height | recipe k |
 | Legend explodes with 36 entries | per-trace `showlegend` default | recipe h |
 | Numbers right, picture wrong, no test red | no visual gate | Step 4 of SKILL.md: golden spec + `diff_spec` + sheet |
+
+## 6. Exposing helper kwargs as page controls (`[C#]`)
+
+The user names which kwargs become controls ("make `threshold_fill` and `legend` dropdowns,
+`ncols` a dropdown, add a recompute button"). Because the twin has the helper's signature,
+a control is nothing more than a kwarg bound to a widget — no new code path, no new
+interpretation of the kwarg, and an mpl oracle at every value.
+
+| Kwarg shape in the helper | Widget | Options from | Default |
+|---|---|---|---|
+| `Literal[...]` / documented string set (`legend='first'|'last'|'all'|None`, `index_join`) | dropdown | the type hint / docstring / the `if kw == ...` branches | notebook cell value |
+| `bool` (`equalize_ylim`, `title_last_yymmdd`, `const_reg`) | switch / checklist | — | notebook cell value |
+| small int (`ncols`, `n_cols`) | dropdown of ints (or slider) | sensible range around the notebook value, stated as `[I#]` | notebook cell value |
+| per-DataFrame list (`axis=["L1","R1",...]`, `threshold_fill=[0,None,...]`, `color`) | one dropdown per DataFrame, labelled by `dfs_name[i]` | tag grammar (`L1/R1/R2`) or the helper's accepted levels | notebook cell list, element-wise |
+| scalar level (`threshold=0`) | numeric input | — | notebook value |
+| data-selection args (`ymd_start`, `overlap_fx_equity`, window) | date picker / dropdown | the frozen snapshot's range / the notebook's universe | notebook value; changes COMPUTE → numeric parity at a non-default value too |
+| "rerun"/"export" | button | — | n/a; action calls a compute-module function, nothing else |
+| always | "reset to notebook" button | — | restores every control to the cell's values |
+
+Callback pattern — pass-through, no interpretation, defaults frozen next to the twin call:
+
+```python
+NOTEBOOK_KWARGS = dict(axis=["L1", "R1", "R1", "R1"], threshold_fill=[None, None, None, None],
+                       title_last_yymmdd=True, legend="all")          # the cell, verbatim
+
+@callback(Output("graph-cta", "figure"),
+          Input("ctl-legend", "value"), Input("ctl-threshold-0", "value"), ...)
+def _render(legend, thr0, ...):
+    controls = {"legend": legend, "threshold_fill": [thr0, None, None, None]}
+    return fvp.plot_df_subplots(*DATA, **{**NOTEBOOK_KWARGS, **controls})  # twin interprets kwargs
+```
+
+Gate: for every `[C#]`, one non-default golden captured from the mpl helper
+(`capture_mpl(fv.plot_df_subplots, *DATA, **{**NOTEBOOK_KWARGS, "legend": "first"})`) and
+one `diff_spec` of the twin at that value — an entry per control in `FIGURES` of
+`test_visual_parity.py`. With default values the page must reproduce the notebook exactly
+(iron rule); the controls only extend it. Store the "reset" defaults in ONE place
+(`NOTEBOOK_KWARGS`), never re-typed in the layout.
+
+Prompt lines that make this unambiguous (one per control):
+`[C1] threshold_fill -> dropdown per DataFrame, options {None, 0}, default as in the notebook`
+`[C2] legend -> dropdown {None, first, last, all}` · `[C3] ncols -> dropdown {2,3,4}` ·
+`[C4] button "recompute suridx" -> reruns compute_im_suridx_and_used_lists on the current controls`

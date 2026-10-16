@@ -189,9 +189,16 @@ kwargs raise NotImplementedError. Visual encodings are requirements (axis
 tags -> secondary y, threshold fills, per-series/per-point colors, second
 title lines, point labels); do not apply the app palette to them. All
 geometry via layout_policy(); section titles in html.H4, not layout.title.
+Controls (pass-through to the twin's kwargs, defaults = the notebook cell,
+plus a "reset to notebook" button):
+[C1] <kwarg> -> dropdown {<options>}      e.g. legend -> dropdown {None, first, last, all}
+[C2] <kwarg> -> dropdown per DataFrame    e.g. threshold_fill -> {None, 0} per df
+[C3] <kwarg> -> switch                    e.g. equalize_ylim
+[C4] button "<label>" -> calls <compute function> on the current controls
 Both gates green (test_parity.py, test_visual_parity.py with goldens captured
-from the notebook helper), lint_layout per figure, overlaps_in_page per Graph,
-contact sheets looked at. End with the PARITY REPORT.
+from the notebook helper at the defaults AND at one non-default value per
+control), lint_layout per figure, overlaps_in_page per Graph, contact sheets
+looked at. End with the PARITY REPORT.
 ```
 
 ### notebook-to-dash, page looks wrong vs notebook
